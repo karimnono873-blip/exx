@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TD Ordonnancement Temps Réel - Cosmic Edition</title>
+    <style>
+        /* =========================================
+           THÈME ASTRONOMIQUE VIOLET (COSMIC THEME)
+           ========================================= */
+        :root {
+            --bg-deep-space: #070311;
+            --bg-nebula: #180a2b;
+            --text-main: #e2d8ee;
+            --text-muted: #a394b6;
+            --neon-purple: #b537f2;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00c8;
+            --glass-bg: rgba(30, 15, 50, 0.6);
+            --glass-border: rgba(181, 55, 242, 0.3);
+            
+            /* Couleurs des tâches avec effets néon */
+            --t1-color: rgba(255, 0, 106, 0.85); /* Rouge/Rose stellaire */
+            --t2-color: rgba(0, 243, 255, 0.85); /* Cyan quantique */
+            --t3-color: rgba(181, 55, 242, 0.85); /* Violet néon */
+            --t4-color: rgba(255, 215, 0, 0.85); /* Jaune étoile */
+            --t5-color: rgba(57, 255, 20, 0.85); /* Vert alien */
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            background: radial-gradient(circle at 50% 100%, var(--bg-nebula), var(--bg-deep-space) 80%);
+            background-attachment: fixed;
+        }
+
+        /* Effet d'étoiles filantes en arrière-plan */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.3;
+            z-index: -1;
+            animation: drift 100s linear infinite;
+        }
+
+        @keyframes drift {
+            from { transform: translateY(0); }
+            to { transform: translateY(-200px); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Glassmorphism pour les sections */
+        section {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 0 20px rgba(181, 55, 242, 0.1), inset 0 0 10px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            font-size: 2.5em;
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: var(--neon-purple);
+            border-bottom: 2px solid var(--neon-purple);
+            padding-bottom: 10px;
+            text-shadow: 0 0 5px var(--neon-purple);
+        }
+
+        h3 { color: var(--neon-pink); }
+
+        /* Styles des Tableaux */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: rgba(181, 55, 242, 0.2);
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+        tr:hover { background-color: rgba(0, 243, 255, 0.1); }
+
+        /* Boîtes d'explications et conclusions */
+        .math-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 4px solid var(--neon-blue);
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #fff;
+        }
+        .conclusion {
+            background: rgba(57, 255, 20, 0.1);
+            border-left: 4px solid #39ff14;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: rgba(255, 0, 106, 0.1);
+            border-left: 4px solid var(--neon-pink);
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        /* =========================================
+           DIAGRAMMES DE GANTT INTERACTIFS
+           ========================================= */
+        .gantt-container {
+            margin: 30px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .gantt-chart {
+            display: flex;
+            flex-direction: column;
+            min-width: 800px;
+        }
+        .gantt-row {
+            display: flex;
+            height: 45px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .gantt-row:hover { background: rgba(255,255,255,0.02); }
+        
+        .gantt-label {
+            width: 80px;
+            color: var(--neon-blue);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            border-right: 1px solid var(--glass-border);
+            padding-right: 10px;
+        }
+        .gantt-timeline {
+            flex-grow: 1;
+            position: relative;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 4.9%,
+                rgba(255,255,255,0.05) 5%
+            );
+        }
+        
+        /* Tâches interactives */
+        .task-block {
+            position: absolute;
+            height: 80%;
+            top: 10%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.85em;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 5px currentColor;
+        }
+        .task-block:hover {
+            transform: scaleY(1.1) translateY(-5%);
+            z-index: 10;
+            filter: brightness(1.2);
+            box-shadow: 0 0 15px currentColor;
+        }
+        
+        /* Tooltip (Infobulle interactive au survol) */
+        .task-block::after {
+            content: attr(data-info);
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-deep-space);
+            border: 1px solid currentColor;
+            padding: 5px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        .task-block:hover::after {
+            opacity: 1;
+            visibility: visible;
+            bottom: 125%;
+        }
+
+        .t1 { background-color: var(--t1-color); color: var(--t1-color); }
+        .t2 { background-color: var(--t2-color); color: var(--t2-color); }
+        .t3 { background-color: var(--t3-color); color: var(--t3-color); }
+        .t4 { background-color: var(--t4-color); color: var(--t4-color); }
+        .t5 { background-color: var(--t5-color); color: var(--t5-color); }
+
+        .time-axis {
+            display: flex;
+            height: 25px;
+            border-top: 1px solid var(--neon-purple);
+            margin-top: 5px;
+        }
+        .time-tick {
+            flex: 1;
+            text-align: left;
+            font-size: 0.75em;
+            color: var(--text-muted);
+            border-left: 1px solid rgba(181, 55, 242, 0.5);
+            padding-left: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 Systèmes Temps Réel : Mission Résolution</h1>
+
+    <section id="exercice-1">
+        <h2>Exercice 1 : RM & Critère de Liu et Layland</h2>
+        <p>Analyse du jeu de tâches avec Période = Échéance (D = P) :</p>
+        <table>
+            <tr><th>Tâche</th><th>Période (P)</th><th>Exécution (C)</th></tr>
+            <tr><td>T1</td><td>50</td><td>10</td></tr>
+            <tr><td>T2</td><td>40</td><td>10</td></tr>
+            <tr><td>T3</td><td>30</td><td>15</td></tr>
+        </table>
+
+        <h3>1. Test d'ordonnançabilité de Liu et Layland</h3>
+        <p>Le critère stipule qu'un système est ordonnançable par RM si l'utilisation globale du processeur (U) est inférieure ou égale à la borne théorique : N * (2^(1/N) - 1).</p>
+        
+        <div class="math-box">
+            Étape 1 : Calcul de l'utilisation U<br>
+            U = (C1/P1) + (C2/P2) + (C3/P3)<br>
+            U = (10/50) + (10/40) + (15/30)<br>
+            U = 0.20 + 0.25 + 0.50 = 0.95 (95%)
+            <br><br>
+            Étape 2 : Calcul de la borne pour N=3<br>
+            Borne = 3 * (2^(1/3) - 1)<br>
+            Borne ≈ 0.779 (77.9%)
+        </div>
+        
+        <div class="conclusion">
+            <strong>Interprétation :</strong> U (0.95) > Borne (0.779). La condition suffisante de Liu & Layland n'est pas vérifiée. Cependant, cela ne signifie pas un échec garanti ; un tracé est nécessaire pour confirmer.
+        </div>
+
+        <h3>2. Diagramme de Gantt Interactif (Rate Monotonic)</h3>
+        <p>Priorités statiques (plus la période est courte, plus la priorité est haute) : <strong>T3 > T2 > T1</strong>.</p>
+        
+        <div class="gantt-container">
+            <div class="gantt-chart">
+                <div class="gantt-row">
+                    <div class="gantt-label">Tâche 3</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t3" style="left: 0%; width: 30%;" data-info="T3 s'exécute: [0-15]. Priorité Haute.">T3</div>
+                        <div class="task-block t3" style="left: 60%; width: 30%;" data-info="T3 reprend: [30-45]. Période 2.">T3</div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">Tâche 2</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t2" style="left: 30%; width: 20%;" data-info="T2 s'exécute: [15-25]. Priorité Moyenne.">T2</div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">Tâche 1</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t1" style="left: 50%; width: 10%;" data-info="T1 préemptée: [25-30]. Priorité Basse.">T1</div>
+                        <div class="task-block t1" style="left: 90%; width: 10%;" data-info="T1 termine: [45-50]. Fin de cycle.">T1</div>
+                    </div>
+                </div>
+                <div class="time-axis">
+                    <div class="time-tick" style="flex: 0 0 10%;">0</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">5</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">10</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">15</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">20</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">25</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">30</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">35</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">40</div>
+                    <div class="time-tick" style="flex: 0 0 10%;">45</div>
+                    <div style="position: absolute; right: 0; color: var(--text-muted); font-size: 0.75em;">50</div>
+                </div>
+            </div>
+        </div>
+        <div class="conclusion">Succès ! Toutes les tâches ont pu s'exécuter avant leur échéance à t=50. RM est faisable.</div>
+    </section>
+
+    <section id="exercice-2">
+        <h2>Exercice 2 : Faille de RM et Sauvetage par EDF</h2>
+        <table>
+            <tr><th>Tâche</th><th>Période (P)</th><th>Exécution (C)</th><th>Échéance (D)</th></tr>
+            <tr><td>T1</td><td>9</td><td>3</td><td>9</td></tr>
+            <tr><td>T2</td><td>18</td><td>5</td><td>18</td></tr>
+            <tr><td>T3</td><td>12</td><td>4</td><td>12</td></tr>
+        </table>
+
+        <h3>1. Trace RM (Échec)</h3>
+        <p>Priorités RM : <strong>T1 (P=9) > T3 (P=12) > T2 (P=18)</strong>.</p>
+        <div class="warning">
+            <strong>Chronologie de l'échec :</strong><br>
+            - [0-3]: T1 (3 unités)<br>
+            - [3-7]: T3 (4 unités)<br>
+            - [7-9]: T2 exécute 2 unités (il en faut 5).<br>
+            - [9-12]: T1 arrive, préempte T2. (3 unités)<br>
+            - [12-16]: T3 arrive, préempte T2. (4 unités)<br>
+            - [16-18]: T2 reprend pour 2 unités.<br>
+            <strong>Bilan à t=18 :</strong> T2 n'a exécuté que 4 unités sur 5. Échéance ratée !
+        </div>
+
+        <h3>2. Trace EDF Interactive (PPCM = 36)</h3>
+        <p>EDF alloue dynamiquement la priorité à l'échéance absolue la plus proche.</p>
+        <div class="gantt-container">
+            <div class="gantt-chart">
+                <div class="gantt-row">
+                    <div class="gantt-label">T1</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t1" style="left: 0%; width: 8.33%;" data-info="[0-3] Ech: 9">T1</div>
+                        <div class="task-block t1" style="left: 25%; width: 8.33%;" data-info="[9-12] Ech: 18 (Prioritaire sur T2)">T1</div>
+                        <div class="task-block t1" style="left: 52.7%; width: 8.33%;" data-info="[19-22] Ech: 27">T1</div>
+                        <div class="task-block t1" style="left: 75%; width: 8.33%;" data-info="[27-30] Ech: 36">T1</div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">T2</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t2" style="left: 19.4%; width: 5.5%;" data-info="[7-9] Ech: 18. Exécute 2u.">T2</div>
+                        <div class="task-block t2" style="left: 33.3%; width: 8.33%;" data-info="[12-15] Ech: 18. Finit ses 3u.">T2</div>
+                        <div class="task-block t2" style="left: 61.1%; width: 5.5%;" data-info="[22-24] Ech: 36. Exécute 2u.">T2</div>
+                        <div class="task-block t2" style="left: 66.6%; width: 8.33%;" data-info="[24-27] Ech: 36. Finit ses 3u.">T2</div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">T3</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t3" style="left: 8.33%; width: 11.1%;" data-info="[3-7] Ech: 12">T3</div>
+                        <div class="task-block t3" style="left: 41.6%; width: 8.33%;" data-info="[15-18] Ech: 24. Exécute 3u.">T3</div>
+                        <div class="task-block t3" style="left: 50%; width: 2.7%;" data-info="[18-19] Ech: 24. Finit 1u.">T3</div>
+                        <div class="task-block t3" style="left: 83.3%; width: 11.1%;" data-info="[30-34] Ech: 36">T3</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>3. Calcul du Taux d'Utilisation</h3>
+        <div class="math-box">
+            U = (C1/T1) + (C2/T2) + (C3/T3)<br>
+            U = 3/9 + 5/18 + 4/12<br>
+            U = 12/36 + 10/36 + 12/36<br>
+            U = 34/36 = 17/18 ≈ 94.44%
+        </div>
+        <div class="conclusion">L'utilisation est ≤ 100%. EDF, étant un algorithme optimal, réussit parfaitement à planifier toutes les tâches !</div>
+    </section>
+
+    <section id="exercice-3">
+        <h2>Exercice 3 : L'Équilibre RM, EDF et LLF</h2>
+        <p>T1(C=1, D=P=3) | T2(C=1, D=P=4) | T3(C=2, D=P=6)</p>
+        
+        <div class="math-box">
+            Facteur U = 1/3 + 1/4 + 2/6 = 4/12 + 3/12 + 4/12 = 11/12 ≈ 0.916<br>
+            Borne LL (N=3) = 0.78<br>
+            Conclusion : U > 0.78. RM n'est pas garanti. EDF et LLF sont garantis (U ≤ 1).
+        </div>
+
+        <p><strong>Schéma de séquencement RM interactif (Priorités: T1 > T2 > T3)</strong></p>
+        <div class="gantt-container">
+            <div class="gantt-chart">
+                <div class="gantt-row">
+                    <div class="gantt-label">T1</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t1" style="left: 0%; width: 8.33%;" data-info="[0-1]">T1</div>
+                        <div class="task-block t1" style="left: 25%; width: 8.33%;" data-info="[3-4]">T1</div>
+                        <div class="task-block t1" style="left: 50%; width: 8.33%;" data-info="[6-7]">T1</div>
+                        <div class="task-block t1" style="left: 75%; width: 8.33%;" data-info="[9-10]">T1</div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">T2</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t2" style="left: 8.33%; width: 8.33%;" data-info="[1-2]">T2</div>
+                        <div class="task-block t2" style="left: 33.3%; width: 8.33%;" data-info="[4-5]">T2</div>
+                        <div class="task-block t2" style="left: 66.6%; width: 8.33%;" data-info="[8-9]">T2</div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">T3</div>
+                    <div class="gantt-timeline">
+                        <div class="task-block t3" style="left: 16.6%; width: 8.33%;" data-info="[2-3]">T3</div>
+                        <div class="task-block t3" style="left: 41.6%; width: 8.33%;" data-info="[5-6]">T3</div>
+                        <div class="task-block t3" style="left: 58.3%; width: 8.33%;" data-info="[7-8]">T3</div>
+                        <div class="task-block t3" style="left: 83.3%; width: 8.33%;" data-info="[10-11]">T3</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p>L'intervalle [11-12] est inactif. RM réussit l'ordonnancement en pratique ! LLF (Least Laxity First) obtiendra un succès similaire en calculant dynamiquement la laxité (L = Échéance - temps courant - exécution restante).</p>
+    </section>
+
+    <section id="exercice-4">
+        <h2>Exercice 4 : Chaos avec D < P</h2>
+        <p>Caractéristiques : T1(P=20, C=3, D=15), T2(P=80, C=40, D=60), T3(P=40, C=10, D=35).</p>
+
+        <div class="math-box">
+            U_global = 3/20 + 40/80 + 10/40 = 0.90 (90%)
+        </div>
+
+        <h3>1/ RMA & 2/ DMA</h3>
+        <ul>
+            <li><strong>RMA (Rate Monotonic) :</strong> Priorité basée sur P (T1 > T3 > T2). T2 subit trop de préemptions et manque son échéance à t=60 car le test U (0.90 > 0.78) a échoué.</li>
+            <li><strong>DMA (Deadline Monotonic) :</strong> Priorité basée sur D (15 < 35 < 60). L'ordre reste identique (T1 > T3 > T2). Test DMA = (3/15 + 40/60 + 10/35) = 1.14 > 1. Échec. T2 rate son échéance.</li>
+        </ul>
+
+        <h3>3/ EDF</h3>
+        <p>EDF gère dynamiquement. À un instant critique proche de t=40, l'échéance absolue de T2 (60) devient plus urgente que la nouvelle instance de T3 (échéance 75). Le processeur alloue le temps à T2 qui termine miraculeusement à t=59.</p>
+    </section>
+
+    <section id="exercice-6">
+        <h2>Exercice 6 : Algorithmes OS Classiques</h2>
+        <p>Durées d'exécution (Burst Time) : P1=10, P2=1, P3=2, P4=1, P5=5.</p>
+
+        <h3>1. FCFS & Round Robin (Tous arrivés à t=0)</h3>
+        
+        <p><strong>FCFS (First-Come, First-Served) :</strong></p>
+        <div class="gantt-container" style="padding: 10px;">
+            <div class="gantt-chart" style="flex-direction: row; height: 50px;">
+                <div class="task-block t1" style="position: relative; width: 52.6%; height: 100%; top:0;" data-info="P1 (0-10)">P1</div>
+                <div class="task-block t2" style="position: relative; width: 5.2%; height: 100%; top:0;" data-info="P2 (10-11)">P2</div>
+                <div class="task-block t3" style="position: relative; width: 10.5%; height: 100%; top:0;" data-info="P3 (11-13)">P3</div>
+                <div class="task-block t4" style="position: relative; width: 5.2%; height: 100%; top:0;" data-info="P4 (13-14)">P4</div>
+                <div class="task-block t5" style="position: relative; width: 26.3%; height: 100%; top:0;" data-info="P5 (14-19)">P5</div>
+            </div>
+        </div>
+
+        <p><strong>Round Robin (q=2) :</strong></p>
+        <div class="gantt-container" style="padding: 10px;">
+            <div class="gantt-chart" style="flex-direction: row; height: 50px;">
+                <div class="task-block t1" style="position: relative; flex: 2; height: 100%; top:0;" data-info="P1[2]">P1</div>
+                <div class="task-block t2" style="position: relative; flex: 1; height: 100%; top:0;" data-info="P2[1]">P2</div>
+                <div class="task-block t3" style="position: relative; flex: 2; height: 100%; top:0;" data-info="P3[2]">P3</div>
+                <div class="task-block t4" style="position: relative; flex: 1; height: 100%; top:0;" data-info="P4[1]">P4</div>
+                <div class="task-block t5" style="position: relative; flex: 2; height: 100%; top:0;" data-info="P5[2]">P5</div>
+                <div class="task-block t1" style="position: relative; flex: 2; height: 100%; top:0;" data-info="P1[2]">P1</div>
+                <div class="task-block t5" style="position: relative; flex: 2; height: 100%; top:0;" data-info="P5[2]">P5</div>
+                <div class="task-block t1" style="position: relative; flex: 2; height: 100%; top:0;" data-info="P1[2]">P1</div>
+                <div class="task-block t5" style="position: relative; flex: 1; height: 100%; top:0;" data-info="P5[1]">P5</div>
+                <div class="task-block t1" style="position: relative; flex: 4; height: 100%; top:0;" data-info="P1[4] (Fin)">P1</div>
+            </div>
+        </div>
+
+        <h3>2. SJF Préemptif (SRTF) avec temps d'arrivée</h3>
+        <p>Arrivées : t(P1)=0, t(P2)=1, t(P3)=2, t(P4)=3, t(P5)=4. La préemption coupe le processus si un nouveau possède un temps restant plus court.</p>
+        <div class="math-box">
+            t=0 : P1 (Reste 10)<br>
+            t=1 : P2 arrive (Reste 1). P2 préempte P1 (Reste 9). P2 finit à t=2.<br>
+            t=2 : P3 arrive (Reste 2). P3 préempte P1. Finit à t=4.<br>
+            t=3 : P4 arrive (Reste 1). P3 a un reste de 1. On laisse P3. P4 tourne [4-5].<br>
+            t=4 : P5 arrive (Reste 5). Attente que P4 finisse.<br>
+            t=5 : P5 tourne [5-10].<br>
+            t=10 : P1 reprend [10-19].
+        </div>
+
+        <h3>3 & 4. Temps de Rotation (TAT) et d'Attente (WT)</h3>
+        <p>Formules : TAT = Temps Fin - Temps Arrivée | WT = TAT - Exécution</p>
+        <table>
+            <tr><th>Processus</th><th>Fin</th><th>Arrivée</th><th>TAT (Rotation)</th><th>Exécution</th><th>WT (Attente)</th></tr>
+            <tr><td>P1</td><td>19</td><td>0</td><td>19</td><td>10</td><td>9</td></tr>
+            <tr><td>P2</td><td>2</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+            <tr><td>P3</td><td>4</td><td>2</td><td>2</td><td>2</td><td>0</td></tr>
+            <tr><td>P4</td><td>5</td><td>3</td><td>2</td><td>1</td><td>1</td></tr>
+            <tr><td>P5</td><td>10</td><td>4</td><td>6</td><td>5</td><td>1</td></tr>
+            <tr style="color: var(--neon-blue); font-weight: bold; background: rgba(0, 243, 255, 0.1);">
+                <td colspan="3">Moyennes Globales</td>
+                <td>30 / 5 = 6.0</td>
+                <td>--</td>
+                <td>11 / 5 = 2.2</td>
+            </tr>
+        </table>
+    </section>
+
+</div>
+
+</body>
+</html>
